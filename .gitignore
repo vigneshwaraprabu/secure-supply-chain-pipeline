@@ -1,0 +1,35 @@
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Secrets and local config (never commit)
+.env
+.env.*
+*.pem
+*.key
+*.kubeconfig
+kubeconfig*
+cosign.key
+cosign.pub
+
+# Build and tooling output
+bin/
+dist/
+build/
+*.log
+sbom/
+*.sarif
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Go
+vendor/
+
+# Local scratch
+tmp/
+scratch/
