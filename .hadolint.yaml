@@ -1,0 +1,4 @@
+# Hadolint configuration, used locally and in CI.
+failure-threshold: warning
+trustedRegistries:
+  - docker.io
