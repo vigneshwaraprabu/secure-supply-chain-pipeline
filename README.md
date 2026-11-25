@@ -55,6 +55,28 @@ Tool versions and maintenance status will be listed here once each tool is wired
 - [ ] Phase 3: Cosign keyless signing, SBOM attestation, kind + Kyverno, `ImageValidatingPolicy`
 - [ ] Phase 4: blocked vs allowed demo, architecture docs, results, lessons learned
 
+## Local build
+
+Prerequisites: Docker, [Hadolint](https://github.com/hadolint/hadolint) (v2.15.1 used) and Go (only to run the app tests).
+
+```bash
+# 1. Lint the Dockerfile (same config as CI)
+hadolint --config .hadolint.yaml Dockerfile
+
+# 2. Run the unit tests
+(cd app && go test ./...)
+
+# 3. Build and run the image
+docker build --build-arg VERSION=local -t ssc-app:local .
+docker run --rm -p 8080:8080 ssc-app:local
+
+# 4. In another terminal
+curl localhost:8080/version   # {"version":"local"}
+curl localhost:8080/healthz   # ok
+```
+
+The image is built in two stages and the final stage is `scratch`, running as the non-root user `65532`.
+
 ## Scope
 
 This is a **demo / portfolio project**, not a production-ready platform. Production concerns such as multi-cluster policy rollout, key and identity governance, exception handling and monitoring are out of scope. This will be stated per component as it is built.
