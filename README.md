@@ -50,7 +50,7 @@ Tool versions and maintenance status will be listed here once each tool is wired
 
 ## Roadmap
 
-- [ ] Phase 1: sample app, multi-stage non-root Dockerfile, Hadolint, build and push to GHCR
+- [x] Phase 1: sample app, multi-stage non-root Dockerfile, Hadolint, build and push to GHCR
 - [ ] Phase 2: Trivy scan, Syft SBOM
 - [ ] Phase 3: Cosign keyless signing, SBOM attestation, kind + Kyverno, `ImageValidatingPolicy`
 - [ ] Phase 4: blocked vs allowed demo, architecture docs, results, lessons learned
@@ -76,6 +76,16 @@ curl localhost:8080/healthz   # ok
 ```
 
 The image is built in two stages and the final stage is `scratch`, running as the non-root user `65532`.
+
+## Published image
+
+On every push to `main`, CI builds a multi-arch image (`linux/amd64`, `linux/arm64`) and pushes it to GHCR. Pull requests are built but not pushed.
+
+```bash
+docker pull ghcr.io/vigneshwaraprabu/secure-supply-chain-pipeline:latest
+```
+
+Tags: `latest`, `main` and `sha-<full commit SHA>`. Tags are mutable, so later stages sign and verify the image by **digest**, which is printed in each run's job summary.
 
 ## Scope
 
