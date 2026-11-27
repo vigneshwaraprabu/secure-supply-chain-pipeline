@@ -94,3 +94,46 @@ jobs:
             echo
             echo "\`${IMAGE}@${DIGEST}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  scan:
+    name: Trivy vulnerability scan
+    needs: build
+    # Scans the pushed image by digest; pull requests do not push an image.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read # pull the image from GHCR
+      security-events: write # upload SARIF to code scanning
+    env:
+      IMAGE_REF: ${{ needs.build.outputs.image }}@${{ needs.build.outputs.digest }}
+      # Override with the repository variable TRIVY_FAIL_SEVERITY, e.g. "HIGH,CRITICAL".
+      FAIL_SEVERITY: ${{ vars.TRIVY_FAIL_SEVERITY || 'CRITICAL' }}
+      TRIVY_USERNAME: ${{ github.actor }}
+      TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Full report (SARIF, all severities)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.2
+          image-ref: ${{ env.IMAGE_REF }}
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: '0'
+
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@915412ff23e8b7659517e607487dbeae018f2934 # v4.39.5
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+      - name: Gate on severity
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.2
+          skip-setup-trivy: true
+          image-ref: ${{ env.IMAGE_REF }}
+          format: table
+          severity: ${{ env.FAIL_SEVERITY }}
+          ignore-unfixed: true
+          exit-code: '1'
