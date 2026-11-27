@@ -87,6 +87,27 @@ docker pull ghcr.io/vigneshwaraprabu/secure-supply-chain-pipeline:latest
 
 Tags: `latest`, `main` and `sha-<full commit SHA>`. Tags are mutable, so later stages sign and verify the image by **digest**, which is printed in each run's job summary.
 
+## Vulnerability scanning
+
+After the image is pushed, CI scans it **by digest** with [Trivy](https://github.com/aquasecurity/trivy) (v0.76.2):
+
+1. A full report (all severities) is uploaded as SARIF to the repository's **Security → Code scanning** tab.
+2. A gate step fails the pipeline if any vulnerability at the configured severity has a fix available.
+
+| Setting | Default | How to change |
+|---|---|---|
+| Failing severity | `CRITICAL` | Repository variable `TRIVY_FAIL_SEVERITY`, e.g. `HIGH,CRITICAL` |
+| Unfixed vulnerabilities | ignored by the gate | `ignore-unfixed` in the workflow |
+
+Because the scan runs after the push, a failing image still exists in GHCR, but signing (Phase 3) only runs after a passing scan, so the cluster policy will refuse it.
+
+Run the same scan locally:
+
+```bash
+trivy image --severity CRITICAL --ignore-unfixed \
+  ghcr.io/vigneshwaraprabu/secure-supply-chain-pipeline:latest
+```
+
 ## Scope
 
 This is a **demo / portfolio project**, not a production-ready platform. Production concerns such as multi-cluster policy rollout, key and identity governance, exception handling and monitoring are out of scope. This will be stated per component as it is built.
